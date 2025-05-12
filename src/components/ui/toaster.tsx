@@ -4,7 +4,7 @@ import { Toast } from 'primereact/toast';
 import { useToast } from './use-toast';
 
 export function Toaster() {
-  const { toast } = useToast();
+  const { toastRef } = useToast();
   
-  return <Toast ref={toast.toastRef} position="top-right" />;
+  return <Toast ref={toastRef} position="top-right" />;
 }

@@ -3,15 +3,29 @@ import * as React from "react";
 import { Dialog as PrimeDialog } from "primereact/dialog";
 import { cn } from "@/lib/utils";
 
-const Dialog = ({ open, onOpenChange, children, ...props }: { 
-  open?: boolean; 
-  onOpenChange?: (open: boolean) => void;
-  children: React.ReactNode;
+const Dialog = ({ children, ...props }: { children: React.ReactNode, [key: string]: any }) => {
+  return <>{children}</>;
+};
+
+const DialogTrigger = ({ children, onClick }: { children: React.ReactNode, onClick?: () => void }) => {
+  return React.cloneElement(children as React.ReactElement, {
+    onClick: onClick
+  });
+};
+
+const DialogContent = ({ 
+  children, 
+  className,
+  ...props 
+}: { 
+  children: React.ReactNode,
+  className?: string,
+  [key: string]: any 
 }) => {
   return (
-    <PrimeDialog 
-      visible={open} 
-      onHide={() => onOpenChange && onOpenChange(false)}
+    <PrimeDialog
+      modal
+      className={cn("p-0", className)}
       {...props}
     >
       {children}
@@ -19,78 +33,45 @@ const Dialog = ({ open, onOpenChange, children, ...props }: {
   );
 };
 
-const DialogTrigger = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>; // In PrimeReact, Dialog is controlled externally
-};
-
-const DialogContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("grid gap-4", className)}
-    {...props}
-  >
-    {children}
-  </div>
-));
-DialogContent.displayName = "DialogContent";
-
 const DialogHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
-      className
-    )}
+    className={cn("flex flex-col space-y-2 text-center sm:text-left p-4 border-b", className)}
     {...props}
   />
 );
-DialogHeader.displayName = "DialogHeader";
 
 const DialogFooter = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      className
-    )}
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-4 border-t", className)}
     {...props}
   />
 );
-DialogFooter.displayName = "DialogFooter";
 
-const DialogTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
+const DialogTitle = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement>) => (
   <h3
-    ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className
-    )}
+    className={cn("text-lg font-semibold", className)}
     {...props}
   />
-));
-DialogTitle.displayName = "DialogTitle";
+);
 
-const DialogDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
+const DialogDescription = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLParagraphElement>) => (
   <p
-    ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
-));
-DialogDescription.displayName = "DialogDescription";
+);
 
 export {
   Dialog,

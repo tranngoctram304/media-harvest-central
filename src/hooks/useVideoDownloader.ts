@@ -1,176 +1,130 @@
 
-import { useState } from "react";
-import { Platform, VideoItem, ScanOptions } from "../types/video";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { VideoData } from '@/types';
 
-export const useVideoDownloader = () => {
-  const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
-  const [downloadFolder, setDownloadFolder] = useState<string>("");
-  const [isDownloading, setIsDownloading] = useState<boolean>(false);
-  const { toast } = useToast();
+export interface UseVideoDownloader {
+  downloadVideo: (videoId: string) => Promise<void>;
+  downloadStatus: Record<string, 'idle' | 'downloading' | 'complete' | 'error'>;
+  downloadProgress: Record<string, number>;
+}
 
-  // Mock scan function - in a real app, this would call an API
-  const scanVideos = async (options: ScanOptions) => {
-    try {
-      setIsScanning(true);
-      toast({
-        title: "Scanning started",
-        description: `Scanning for videos from ${options.platform}...`,
+export const useVideoDownloader = (): UseVideoDownloader => {
+  const [downloadStatus, setDownloadStatus] = useState<Record<string, 'idle' | 'downloading' | 'complete' | 'error'>>({});
+  const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
+  const toast = useToast();
+
+  const downloadVideo = async (videoId: string): Promise<void> => {
+    if (downloadStatus[videoId] === 'downloading') {
+      toast.error({
+        title: 'Download already in progress',
+        description: 'This video is already being downloaded.'
       });
+      return;
+    }
 
-      // This is a mock implementation
-      // In a real app, this would call an API to get videos
-      const mockDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      await mockDelay(2000);
+    // Set initial status
+    setDownloadStatus(prev => ({
+      ...prev,
+      [videoId]: 'downloading'
+    }));
+    
+    setDownloadProgress(prev => ({
+      ...prev,
+      [videoId]: 0
+    }));
 
-      // Generate mock data based on the platform
-      const mockData: VideoItem[] = Array.from({ length: options.maxVideos }).map((_, i) => ({
-        id: `${options.platform}-${Date.now()}-${i}`,
-        platform: options.platform,
-        caption: `${options.platform} video ${i + 1}`,
-        likes: Math.floor(Math.random() * 10000),
-        shares: Math.floor(Math.random() * 5000),
-        comments: Math.floor(Math.random() * 3000),
-        views: Math.floor(Math.random() * 100000),
-        status: 'ready',
-        url: options.url,
-        thumbnailUrl: `https://picsum.photos/200/300?random=${i}`,
-        dateCreated: new Date().toISOString(),
+    try {
+      // Simulate a download with progress
+      for (let i = 0; i <= 100; i += 10) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setDownloadProgress(prev => ({
+          ...prev,
+          [videoId]: i
+        }));
+      }
+
+      // Complete the download
+      setDownloadStatus(prev => ({
+        ...prev,
+        [videoId]: 'complete'
       }));
-
-      // Sort based on the sortBy option
-      if (options.sortBy) {
-        mockData.sort((a, b) => b[options.sortBy!] - a[options.sortBy!]);
-      }
-
-      setVideos(mockData);
-      toast({
-        title: "Scan completed",
-        description: `Found ${mockData.length} videos from ${options.platform}`,
+      
+      toast.success({
+        title: 'Download complete',
+        description: 'Your video has been downloaded successfully.'
       });
-    } catch (error) {
-      console.error("Error scanning videos:", error);
-      toast({
-        title: "Scan failed",
-        description: "An error occurred while scanning for videos.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsScanning(false);
-    }
-  };
 
-  const stopScanning = () => {
-    if (isScanning) {
-      setIsScanning(false);
-      toast({
-        title: "Scanning stopped",
-        description: "Video scanning has been stopped.",
-      });
-    }
-  };
-
-  const toggleVideoSelection = (videoId: string) => {
-    setSelectedVideos((prev) => 
-      prev.includes(videoId)
-        ? prev.filter(id => id !== videoId)
-        : [...prev, videoId]
-    );
-  };
-
-  const toggleSelectAll = (selected: boolean) => {
-    if (selected) {
-      setSelectedVideos(videos.map(video => video.id));
-    } else {
-      setSelectedVideos([]);
-    }
-  };
-
-  const downloadVideos = async () => {
-    try {
-      if (selectedVideos.length === 0) {
-        toast({
-          title: "No videos selected",
-          description: "Please select videos to download.",
-          variant: "destructive",
+      // Reset after 3 seconds
+      setTimeout(() => {
+        setDownloadStatus(prev => {
+          const newStatus = { ...prev };
+          delete newStatus[videoId];
+          return newStatus;
         });
-        return;
-      }
-
-      if (!downloadFolder) {
-        toast({
-          title: "No folder selected",
-          description: "Please select a folder to save the videos.",
-          variant: "destructive",
+        
+        setDownloadProgress(prev => {
+          const newProgress = { ...prev };
+          delete newProgress[videoId];
+          return newProgress;
         });
-        return;
-      }
-
-      setIsDownloading(true);
-      toast({
-        title: "Download started",
-        description: `Downloading ${selectedVideos.length} videos to ${downloadFolder}...`,
-      });
-
-      // Update status for selected videos
-      setVideos(prev => 
-        prev.map(video => 
-          selectedVideos.includes(video.id) 
-            ? { ...video, status: 'downloading' } 
-            : video
-        )
-      );
-
-      // Mock download delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Update status to downloaded
-      setVideos(prev => 
-        prev.map(video => 
-          selectedVideos.includes(video.id) 
-            ? { ...video, status: 'downloaded' } 
-            : video
-        )
-      );
-
-      toast({
-        title: "Download completed",
-        description: `Successfully downloaded ${selectedVideos.length} videos to ${downloadFolder}`,
-      });
+      }, 3000);
+      
     } catch (error) {
-      console.error("Error downloading videos:", error);
-      toast({
-        title: "Download failed",
-        description: "An error occurred while downloading videos.",
-        variant: "destructive",
+      setDownloadStatus(prev => ({
+        ...prev,
+        [videoId]: 'error'
+      }));
+      
+      toast.error({
+        title: 'Download failed',
+        description: error instanceof Error ? error.message : 'An unknown error occurred'
       });
-
-      // Update status to error for selected videos
-      setVideos(prev => 
-        prev.map(video => 
-          selectedVideos.includes(video.id) 
-            ? { ...video, status: 'error', errorMessage: 'Download failed' } 
-            : video
-        )
-      );
-    } finally {
-      setIsDownloading(false);
     }
+  };
+
+  const simulateVideoInfo = async (url: string): Promise<VideoData> => {
+    if (!url || !url.trim()) {
+      toast.error({
+        title: 'Invalid URL',
+        description: 'Please enter a valid URL'
+      });
+      throw new Error('Invalid URL');
+    }
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // 10% chance of error for simulation purposes
+    if (Math.random() < 0.1) {
+      toast.error({
+        title: 'Failed to fetch video info',
+        description: 'Could not retrieve video information'
+      });
+      throw new Error('Failed to fetch video info');
+    }
+    
+    // Generate mock video data
+    const mockVideoId = Math.random().toString(36).substring(2, 12);
+    
+    toast.success({
+      title: 'Video found',
+      description: 'Video information retrieved successfully'
+    });
+    
+    return {
+      id: mockVideoId,
+      title: `Sample Video ${mockVideoId.substring(0, 5)}`,
+      thumbnail: `https://picsum.photos/seed/${mockVideoId}/640/360`,
+      duration: Math.floor(Math.random() * 3600), // Random duration up to 1 hour
+      resolution: ['480p', '720p', '1080p'][Math.floor(Math.random() * 3)],
+      created_at: new Date().toISOString()
+    };
   };
 
   return {
-    videos,
-    isScanning,
-    isDownloading,
-    selectedVideos,
-    downloadFolder,
-    scanVideos,
-    stopScanning,
-    toggleVideoSelection,
-    toggleSelectAll,
-    setDownloadFolder,
-    downloadVideos,
+    downloadVideo,
+    downloadStatus,
+    downloadProgress
   };
 };

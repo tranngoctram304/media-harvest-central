@@ -1,42 +1,64 @@
-import * as React from "react"
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
-import { Circle } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { RadioButton } from "primereact/radiobutton";
+import { cn } from "@/lib/utils";
+
+interface RadioGroupProps {
+  className?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  children?: React.ReactNode;
+}
 
 const RadioGroup = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
->(({ className, ...props }, ref) => {
+  HTMLDivElement,
+  RadioGroupProps
+>(({ className, children, value, onChange, ...props }, ref) => {
   return (
-    <RadioGroupPrimitive.Root
+    <div
+      ref={ref}
       className={cn("grid gap-2", className)}
       {...props}
-      ref={ref}
-    />
-  )
-})
-RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
+    >
+      {React.Children.map(children, (child) => {
+        if (!React.isValidElement(child)) return child;
+        
+        return React.cloneElement(child as React.ReactElement<any>, {
+          name: props.name,
+          checked: value === child.props.value,
+          onChange: onChange ? (e: any) => onChange(e.value) : undefined
+        });
+      })}
+    </div>
+  );
+});
+
+RadioGroup.displayName = "RadioGroup";
+
+interface RadioGroupItemProps {
+  value: string;
+  checked?: boolean;
+  disabled?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+  onChange?: (e: any) => void;
+}
 
 const RadioGroupItem = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
->(({ className, ...props }, ref) => {
+  HTMLInputElement,
+  RadioGroupItemProps
+>(({ className, children, ...props }, ref) => {
   return (
-    <RadioGroupPrimitive.Item
-      ref={ref}
-      className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-      {...props}
-    >
-      <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <Circle className="h-2.5 w-2.5 fill-current text-current" />
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
-  )
-})
-RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
+    <div className="flex items-center space-x-2">
+      <RadioButton 
+        inputRef={ref}
+        {...props} 
+      />
+      {children && <label>{children}</label>}
+    </div>
+  );
+});
 
-export { RadioGroup, RadioGroupItem }
+RadioGroupItem.displayName = "RadioGroupItem";
+
+export { RadioGroup, RadioGroupItem };
