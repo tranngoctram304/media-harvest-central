@@ -1,9 +1,10 @@
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { VideoItem, Platform } from "@/types/video";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { useRef, useEffect } from "react";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Checkbox } from "primereact/checkbox";
+import { Badge } from "primereact/badge";
+import { VideoItem, Platform } from "@/types/video";
 
 interface VideoTableProps {
   videos: VideoItem[];
@@ -22,16 +23,6 @@ const VideoTable = ({
 }: VideoTableProps) => {
   const allSelected = videos.length > 0 && selectedVideos.length === videos.length;
   const someSelected = selectedVideos.length > 0 && selectedVideos.length < videos.length;
-  // Change to HTMLButtonElement to match what Checkbox expects
-  const checkboxRef = useRef<HTMLButtonElement>(null);
-
-  // Use useEffect to set the indeterminate property on the checkbox DOM element
-  useEffect(() => {
-    if (checkboxRef.current) {
-      // Set the indeterminate property directly
-      checkboxRef.current.indeterminate = someSelected;
-    }
-  }, [someSelected]);
 
   const getPlatformBadge = (platform: Platform) => {
     switch (platform) {
@@ -53,91 +44,122 @@ const VideoTable = ({
   const getStatusBadge = (status: VideoItem['status']) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
+        return <Badge value="Pending" severity="info" />;
       case 'scanning':
-        return <Badge variant="secondary" className="animate-pulse-light">Scanning</Badge>;
+        return <Badge value="Scanning" severity="info" className="animate-pulse-light" />;
       case 'ready':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Ready</Badge>;
+        return <Badge value="Ready" severity="info" />;
       case 'downloading':
-        return <Badge variant="secondary" className="animate-pulse-light">Downloading</Badge>;
+        return <Badge value="Downloading" severity="warning" className="animate-pulse-light" />;
       case 'downloaded':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Downloaded</Badge>;
+        return <Badge value="Downloaded" severity="success" />;
       case 'error':
-        return <Badge variant="destructive">Error</Badge>;
+        return <Badge value="Error" severity="danger" />;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge value={status} severity="info" />;
     }
   };
 
+  const checkboxHeader = (
+    <Checkbox
+      checked={allSelected}
+      indeterminate={someSelected}
+      onChange={(e) => onToggleSelectAll(e.checked || false)}
+      aria-label="Select all"
+    />
+  );
+
+  const checkboxBodyTemplate = (rowData: VideoItem) => {
+    return (
+      <Checkbox
+        checked={selectedVideos.includes(rowData.id)}
+        onChange={() => onToggleSelection(rowData.id)}
+        aria-label={`Select video ${rowData.id}`}
+      />
+    );
+  };
+
+  const indexBodyTemplate = (_: any, options: any) => {
+    return options.rowIndex + 1;
+  };
+
+  const platformBodyTemplate = (rowData: VideoItem) => {
+    return (
+      <div className="flex flex-col">
+        <span className="text-sm font-medium">{rowData.id.substring(0, 10)}...</span>
+        <span className="mt-1">{getPlatformBadge(rowData.platform)}</span>
+      </div>
+    );
+  };
+
+  const captionBodyTemplate = (rowData: VideoItem) => {
+    return <span className="text-sm truncate max-w-[200px]">{rowData.caption}</span>;
+  };
+
+  const numberBodyTemplate = (rowData: VideoItem, field: keyof VideoItem) => {
+    return <span>{(rowData[field] as number).toLocaleString()}</span>;
+  };
+
+  const statusBodyTemplate = (rowData: VideoItem) => {
+    return <div className="text-center">{getStatusBadge(rowData.status)}</div>;
+  };
+
+  const emptyMessage = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
+          <span className="text-gray-500">Scanning videos...</span>
+        </div>
+      );
+    }
+    return (
+      <div className="text-center py-10">
+        <span className="text-gray-500">No videos found. Start by scanning videos from any platform.</span>
+      </div>
+    );
+  };
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox
-                ref={checkboxRef}
-                checked={allSelected}
-                onCheckedChange={onToggleSelectAll}
-                aria-label="Select all"
-              />
-            </TableHead>
-            <TableHead className="w-12">#</TableHead>
-            <TableHead>ID / Platform</TableHead>
-            <TableHead>Caption</TableHead>
-            <TableHead className="text-right">Likes</TableHead>
-            <TableHead className="text-right">Shares</TableHead>
-            <TableHead className="text-right">Comments</TableHead>
-            <TableHead className="text-right">Views</TableHead>
-            <TableHead className="text-center">Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell colSpan={9} className="text-center py-10">
-                <div className="flex flex-col items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
-                  <span className="text-muted-foreground">Scanning videos...</span>
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : videos.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={9} className="text-center py-10">
-                <span className="text-muted-foreground">No videos found. Start by scanning videos from any platform.</span>
-              </TableCell>
-            </TableRow>
-          ) : (
-            videos.map((video, index) => (
-              <TableRow key={video.id}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedVideos.includes(video.id)}
-                    onCheckedChange={() => onToggleSelection(video.id)}
-                    aria-label={`Select video ${index + 1}`}
-                  />
-                </TableCell>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{video.id.substring(0, 10)}...</span>
-                    <span className="mt-1">{getPlatformBadge(video.platform)}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">
-                  <span className="text-sm">{video.caption}</span>
-                </TableCell>
-                <TableCell className="text-right">{video.likes.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{video.shares.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{video.comments.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{video.views.toLocaleString()}</TableCell>
-                <TableCell className="text-center">{getStatusBadge(video.status)}</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+    <div className="border rounded-md">
+      <DataTable
+        value={videos}
+        loading={isLoading}
+        emptyMessage={emptyMessage}
+        className="p-datatable-sm"
+        responsiveLayout="scroll"
+        showGridlines
+      >
+        <Column header={checkboxHeader} body={checkboxBodyTemplate} style={{ width: '3rem' }} />
+        <Column header="#" body={indexBodyTemplate} style={{ width: '3rem' }} />
+        <Column header="ID / Platform" body={platformBodyTemplate} />
+        <Column field="caption" header="Caption" body={captionBodyTemplate} />
+        <Column 
+          field="likes" 
+          header="Likes" 
+          body={(rowData) => numberBodyTemplate(rowData, 'likes')} 
+          align="right"
+        />
+        <Column 
+          field="shares" 
+          header="Shares" 
+          body={(rowData) => numberBodyTemplate(rowData, 'shares')} 
+          align="right"
+        />
+        <Column 
+          field="comments" 
+          header="Comments" 
+          body={(rowData) => numberBodyTemplate(rowData, 'comments')} 
+          align="right"
+        />
+        <Column 
+          field="views" 
+          header="Views" 
+          body={(rowData) => numberBodyTemplate(rowData, 'views')} 
+          align="right"
+        />
+        <Column header="Status" body={statusBodyTemplate} align="center" />
+      </DataTable>
     </div>
   );
 };
