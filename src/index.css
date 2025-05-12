@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,20 +35,13 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
+    --sidebar-background: 220 14% 96%;
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -79,6 +73,7 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -97,5 +92,50 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+@layer components {
+  .animated-gradient {
+    background-size: 200% 200%;
+    animation: gradient 5s ease infinite;
+  }
+
+  .platform-badge {
+    @apply inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+  
+  .platform-badge.youtube {
+    @apply bg-red-100 text-brand-red;
+  }
+  
+  .platform-badge.tiktok {
+    @apply bg-black text-white;
+  }
+  
+  .platform-badge.instagram {
+    @apply bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white;
+  }
+  
+  .platform-badge.facebook {
+    @apply bg-brand-facebook text-white;
   }
 }
