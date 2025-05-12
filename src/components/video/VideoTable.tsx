@@ -60,14 +60,15 @@ const VideoTable = ({
     }
   };
 
-  const checkboxHeader = (
-    <Checkbox
-      checked={allSelected}
-      indeterminate={someSelected}
-      onChange={(e) => onToggleSelectAll(e.checked || false)}
-      aria-label="Select all"
-    />
-  );
+  const checkboxHeader = () => {
+    return (
+      <Checkbox 
+        checked={allSelected}
+        onChange={(e) => onToggleSelectAll(e.checked || false)}
+        aria-label="Select all"
+      />
+    );
+  };
 
   const checkboxBodyTemplate = (rowData: VideoItem) => {
     return (

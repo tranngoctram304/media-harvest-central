@@ -1,14 +1,13 @@
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TabView, TabPanel } from "primereact/tabview";
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import { InputTextarea } from "primereact/inputtextarea";
+import { Dropdown } from "primereact/dropdown";
+import { InputNumber } from "primereact/inputnumber";
+import { Card } from "primereact/card";
 import { ScanOptions, Platform } from "@/types/video";
-import { Card, CardContent } from "@/components/ui/card";
-import { Download, Square } from "lucide-react";
 
 interface ScanControlsProps {
   onScan: (options: ScanOptions) => void;
@@ -22,6 +21,13 @@ const platforms: Array<{ id: Platform; name: string; requiresCookies: boolean }>
   { id: 'youtube', name: 'YouTube', requiresCookies: false },
   { id: 'facebook', name: 'Facebook', requiresCookies: true },
   { id: 'instagram', name: 'Instagram', requiresCookies: true },
+];
+
+const sortOptions = [
+  { label: 'Views', value: 'views' },
+  { label: 'Likes', value: 'likes' },
+  { label: 'Shares', value: 'shares' },
+  { label: 'Comments', value: 'comments' },
 ];
 
 const ScanControls = ({ onScan, onStop, isScanning }: ScanControlsProps) => {
@@ -50,22 +56,17 @@ const ScanControls = ({ onScan, onStop, isScanning }: ScanControlsProps) => {
   };
 
   return (
-    <Card className="mb-6 p-0">
-      <CardContent className="pt-6">
-        <Tabs defaultValue="youtube" onValueChange={(value) => setActivePlatform(value as Platform)}>
-          <TabsList className="grid grid-cols-5 mb-4">
-            {platforms.map((platform) => (
-              <TabsTrigger key={platform.id} value={platform.id}>
-                {platform.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          {platforms.map((platform) => (
-            <TabsContent key={platform.id} value={platform.id} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor={`${platform.id}-url`}>URL</Label>
-                <Input
+    <Card className="mb-6">
+      <TabView 
+        activeIndex={platforms.findIndex(p => p.id === activePlatform)}
+        onTabChange={(e) => setActivePlatform(platforms[e.index].id)}
+      >
+        {platforms.map((platform) => (
+          <TabPanel key={platform.id} header={platform.name}>
+            <div className="p-fluid grid formgrid">
+              <div className="field col-12 mb-3">
+                <label htmlFor={`${platform.id}-url`} className="block mb-2">URL</label>
+                <InputText
                   id={`${platform.id}-url`}
                   placeholder={`Enter ${platform.name} URL`}
                   value={platform.id === activePlatform ? url : ''}
@@ -74,9 +75,9 @@ const ScanControls = ({ onScan, onStop, isScanning }: ScanControlsProps) => {
               </div>
               
               {platform.requiresCookies && (
-                <div className="space-y-2">
-                  <Label htmlFor={`${platform.id}-cookies`}>Cookies</Label>
-                  <Textarea
+                <div className="field col-12 mb-3">
+                  <label htmlFor={`${platform.id}-cookies`} className="block mb-2">Cookies</label>
+                  <InputTextarea
                     id={`${platform.id}-cookies`}
                     placeholder={`Paste ${platform.name} cookies here`}
                     value={platform.id === activePlatform ? cookies : ''}
@@ -85,60 +86,51 @@ const ScanControls = ({ onScan, onStop, isScanning }: ScanControlsProps) => {
                   />
                 </div>
               )}
-            </TabsContent>
-          ))}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="max-videos">Maximum Videos</Label>
-              <Input
-                id="max-videos"
-                type="number"
-                min="1"
-                max="100"
-                value={maxVideos}
-                onChange={(e) => setMaxVideos(parseInt(e.target.value) || 10)}
-              />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="sort-by">Sort By</Label>
-              <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sort By" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="views">Views</SelectItem>
-                  <SelectItem value="likes">Likes</SelectItem>
-                  <SelectItem value="shares">Shares</SelectItem>
-                  <SelectItem value="comments">Comments</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          </TabPanel>
+        ))}
+
+        <div className="p-fluid grid formgrid mt-4">
+          <div className="field col-12 md:col-6 mb-3">
+            <label htmlFor="max-videos" className="block mb-2">Maximum Videos</label>
+            <InputNumber
+              id="max-videos"
+              value={maxVideos}
+              onValueChange={(e) => setMaxVideos(e.value || 10)}
+              min={1}
+              max={100}
+            />
           </div>
           
-          <div className="flex gap-4 mt-6">
-            {isScanning ? (
-              <Button 
-                onClick={onStop}
-                variant="destructive" 
-                className="flex items-center gap-2"
-              >
-                <Square className="h-4 w-4" />
-                Stop Scanning
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleScan}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Scan Videos
-              </Button>
-            )}
+          <div className="field col-12 md:col-6 mb-3">
+            <label htmlFor="sort-by" className="block mb-2">Sort By</label>
+            <Dropdown
+              id="sort-by"
+              value={sortBy}
+              options={sortOptions}
+              onChange={(e) => setSortBy(e.value)}
+              placeholder="Select a sorting option"
+            />
           </div>
-        </Tabs>
-      </CardContent>
+        </div>
+        
+        <div className="flex gap-4 mt-4">
+          {isScanning ? (
+            <Button 
+              onClick={onStop}
+              severity="danger"
+              label="Stop Scanning"
+              icon="pi pi-stop"
+            />
+          ) : (
+            <Button 
+              onClick={handleScan}
+              label="Scan Videos"
+              icon="pi pi-search"
+            />
+          )}
+        </div>
+      </TabView>
     </Card>
   );
 };

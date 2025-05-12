@@ -1,8 +1,7 @@
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Download } from "lucide-react";
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import { useState } from "react";
 
 interface DownloadControlsProps {
   downloadFolder: string;
@@ -27,47 +26,33 @@ const DownloadControls = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mt-6">
-      <div className="flex-1">
-        <Label htmlFor="download-folder" className="mb-2 block">
-          Download Folder
-        </Label>
-        <div className="flex gap-2">
-          <Input
+    <div className="p-fluid grid formgrid mt-4">
+      <div className="field col-12 md:col-8 mb-3">
+        <label htmlFor="download-folder" className="block mb-2">Download Folder</label>
+        <div className="p-inputgroup">
+          <InputText
             id="download-folder"
             value={downloadFolder}
             onChange={(e) => onFolderChange(e.target.value)}
             placeholder="Select folder to save videos"
-            className="flex-1"
             readOnly
           />
           <Button 
-            type="button" 
-            variant="outline" 
+            label="Browse"
             onClick={handleSelectFolder}
-          >
-            Browse
-          </Button>
+          />
         </div>
       </div>
-      <div className="self-end sm:self-end">
+      
+      <div className="field col-12 md:col-4 mb-3 flex align-items-end">
         <Button
           onClick={onDownload}
           disabled={selectedCount === 0 || !downloadFolder || isDownloading}
-          className="w-full sm:w-auto flex items-center gap-2"
-        >
-          {isDownloading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Downloading...
-            </>
-          ) : (
-            <>
-              <Download className="h-4 w-4" />
-              Download {selectedCount} {selectedCount === 1 ? 'Video' : 'Videos'}
-            </>
-          )}
-        </Button>
+          icon="pi pi-download"
+          label={isDownloading ? "Downloading..." : `Download ${selectedCount} ${selectedCount === 1 ? 'Video' : 'Videos'}`}
+          loading={isDownloading}
+          className="w-full"
+        />
       </div>
     </div>
   );
