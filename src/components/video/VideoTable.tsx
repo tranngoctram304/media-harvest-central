@@ -21,12 +21,14 @@ const VideoTable = ({
 }: VideoTableProps) => {
   const allSelected = videos.length > 0 && selectedVideos.length === videos.length;
   const someSelected = selectedVideos.length > 0 && selectedVideos.length < videos.length;
-  const checkboxRef = useRef<HTMLButtonElement>(null);
+  // Change the type to use HTMLElement instead of HTMLButtonElement
+  const checkboxRef = useRef<HTMLElement>(null);
 
   // Use useEffect to set the indeterminate property on the checkbox DOM element
   useEffect(() => {
     if (checkboxRef.current) {
-      checkboxRef.current.indeterminate = someSelected;
+      // Use type assertion to set the indeterminate property
+      (checkboxRef.current as any).indeterminate = someSelected;
     }
   }, [someSelected]);
 
