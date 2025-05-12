@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScanOptions, Platform } from "@/types/video";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, Stop } from "lucide-react";
+import { Download, Square } from "lucide-react";
 
 interface ScanControlsProps {
   onScan: (options: ScanOptions) => void;
@@ -124,7 +124,7 @@ const ScanControls = ({ onScan, onStop, isScanning }: ScanControlsProps) => {
                 variant="destructive" 
                 className="flex items-center gap-2"
               >
-                <Stop className="h-4 w-4" />
+                <Square className="h-4 w-4" />
                 Stop Scanning
               </Button>
             ) : (

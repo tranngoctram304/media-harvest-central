@@ -1,8 +1,8 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { VideoItem, Platform } from "@/types/video";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { useRef, useEffect } from "react";
 
 interface VideoTableProps {
   videos: VideoItem[];
@@ -21,6 +21,14 @@ const VideoTable = ({
 }: VideoTableProps) => {
   const allSelected = videos.length > 0 && selectedVideos.length === videos.length;
   const someSelected = selectedVideos.length > 0 && selectedVideos.length < videos.length;
+  const checkboxRef = useRef<HTMLButtonElement>(null);
+
+  // Use useEffect to set the indeterminate property on the checkbox DOM element
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
 
   const getPlatformBadge = (platform: Platform) => {
     switch (platform) {
@@ -65,8 +73,8 @@ const VideoTable = ({
           <TableRow>
             <TableHead className="w-12">
               <Checkbox
+                ref={checkboxRef}
                 checked={allSelected}
-                indeterminate={someSelected}
                 onCheckedChange={onToggleSelectAll}
                 aria-label="Select all"
               />
